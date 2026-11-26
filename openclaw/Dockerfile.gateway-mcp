@@ -1,0 +1,9 @@
+FROM ghcr.io/openclaw/openclaw:latest
+USER root
+WORKDIR /home/node/mcp-tools
+COPY mcp-tools/package*.json mcp-tools/tsconfig.json ./
+RUN npm install --include=dev
+COPY mcp-tools/src ./src
+RUN ./node_modules/.bin/tsc && npm prune --omit=dev && mkdir -p files && chown -R node:node /home/node/mcp-tools
+USER node
+WORKDIR /app

@@ -1,0 +1,44 @@
+﻿DEMO CHEAT SHEET  (copy one line at a time)
+
+=== A. PASTE INTO THE CHAT BOX (web page), then press Enter ===
+
+[P1 create a file]
+Use the tool local-tools__create_file to create greet.py containing: print("Hello, professor! This file was created by my AI agent.")
+
+[P2 list files]
+Use the tool local-tools__list_files to show all files
+
+[P3 read a file]
+Use the tool local-tools__read_file to read greet.py
+
+[P4 run a command]
+Use the tool local-tools__run_command to run: python3 greet.py
+
+[P5 write code and run it]  (expected answer: 9 words)
+Write a Python script that counts the words in this sentence: "the quick brown fox jumps over the lazy dog". Use the tool local-tools__create_file to save it as count.py, then use the tool local-tools__run_command to run it with python3.
+
+[P6 show the time limit - only if asked]
+Use the tool local-tools__run_command to run: sleep 20
+
+=== B. TYPE IN THE TERMINAL (VS Code: press Ctrl+backtick) ===
+
+[T0 go to the project folder]
+cd C:\OpenClaw-Project\openclaw
+
+[T1 show running containers]
+docker compose ps
+
+[T2 list the files the agent created]
+docker exec openclaw-openclaw-gateway-1 ls -la /home/node/mcp-tools/files
+
+[T3 show what is inside greet.py]
+docker exec openclaw-openclaw-gateway-1 cat /home/node/mcp-tools/files/greet.py
+
+[T4 show which AI model is used]
+docker exec openclaw-openclaw-gateway-1 sh -c "openclaw models 2>/dev/null | grep Default"
+
+[T5 show the storage volume]
+docker volume ls
+
+=== C. BEFORE THE PRESENTATION ONLY (clean the demo folder) ===
+docker exec openclaw-openclaw-gateway-1 sh -c "rm -f /home/node/mcp-tools/files/*"

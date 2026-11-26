@@ -1,0 +1,24 @@
+services:
+  openclaw-gateway:
+    image: openclaw-gateway-mcp:local
+    build:
+      context: ..
+      dockerfile: openclaw/Dockerfile.gateway-mcp
+    volumes:
+      - mcp-files:/home/node/mcp-tools/files
+
+  webapp:
+    build:
+      context: ../webapp
+    ports:
+      - "3100:3100"
+    env_file:
+      - ../webapp/.env
+    environment:
+      GATEWAY_URL: http://openclaw-gateway:18789
+    depends_on:
+      - openclaw-gateway
+    restart: unless-stopped
+
+volumes:
+  mcp-files:

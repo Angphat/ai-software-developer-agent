@@ -1,0 +1,341 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Software Developer Agent</title>
+<style>
+  :root { --navy:#14213d; --ivory:#f8f4ea; --paper:#fffdf8; --gold:#b8914f; --gold2:#d4b06a; --ink:#1c2230; --muted:#6c7385; --line:#e6dfcd; --ok:#2e7d4f; --bad:#a63d40; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; font-family:"Segoe UI", system-ui, sans-serif; background:var(--ivory); color:var(--ink); }
+  .app { display:grid; grid-template-columns: 280px 1fr; height:100vh; }
+  .side { background:var(--navy); color:#e9e4d6; display:flex; flex-direction:column; min-height:0; }
+  .brand { padding:20px 18px 14px; font-family:Georgia,"Times New Roman",serif; font-size:1.05rem; border-bottom:1px solid rgba(255,255,255,.08); }
+  .brand small { display:block; color:var(--gold2); font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase; margin-top:5px; font-family:"Segoe UI",sans-serif; }
+  .newbtn { margin:14px; padding:11px 14px; border:1px solid var(--gold); background:transparent; color:var(--gold2); border-radius:8px; cursor:pointer; font-size:.95rem; text-align:left; }
+  .newbtn:hover { background:rgba(184,145,79,.15); }
+  .histtitle { padding:4px 18px 6px; font-size:.68rem; letter-spacing:1.4px; text-transform:uppercase; color:#9aa3b8; }
+  .list { flex:1; overflow-y:auto; padding:0 10px 10px; }
+  .item { display:flex; align-items:center; gap:6px; padding:9px 10px; border-radius:8px; cursor:pointer; font-size:.9rem; color:#d9d4c4; }
+  .item:hover { background:rgba(255,255,255,.06); }
+  .item.active { background:rgba(184,145,79,.24); color:#fff; }
+  .item .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item button { background:none; border:0; color:#9aa3b8; cursor:pointer; font-size:1rem; visibility:hidden; }
+  .item:hover button { visibility:visible; }
+  .noitems { padding:10px; font-size:.82rem; color:#8f98ad; }
+  .sidefoot { padding:12px 16px; font-size:.72rem; color:#8f98ad; border-top:1px solid rgba(255,255,255,.08); line-height:1.5; }
+  .sidefoot a { color:var(--gold2); cursor:pointer; text-decoration:underline; }
+  .main { display:flex; flex-direction:column; min-height:0; }
+  .head { padding:16px 28px; border-bottom:1px solid var(--line); background:var(--paper); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  h1 { margin:0; font-family:Georgia,"Times New Roman",serif; font-size:1.45rem; color:var(--navy); font-weight:600; }
+  .tag { color:var(--muted); font-size:.82rem; margin-top:3px; letter-spacing:.4px; }
+  .pill { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:#fff; padding:6px 12px; border-radius:999px; font-size:.82rem; color:var(--muted); }
+  .dot { width:9px; height:9px; border-radius:50%; background:#c9a24b; }
+  .dot.live { background:var(--ok); } .dot.down { background:var(--bad); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 28px; border-bottom:1px solid var(--line); background:var(--paper); }
+  .chips b { font-size:.7rem; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); margin-right:6px; }
+  .chip { border:1px solid var(--gold); background:#fff; color:var(--navy); padding:7px 14px; border-radius:6px; cursor:pointer; font-size:.88rem; }
+  .chip:hover { background:var(--navy); color:var(--ivory); border-color:var(--navy); }
+  .chip:disabled { opacity:.45; cursor:not-allowed; }
+  #log { flex:1; min-height:0; overflow-y:auto; padding:22px 28px; display:flex; flex-direction:column; gap:14px; }
+  .empty { margin:auto; text-align:center; color:var(--muted); max-width:480px; line-height:1.7; }
+  .empty h2 { font-family:Georgia,"Times New Roman",serif; color:var(--navy); font-weight:600; margin:0 0 8px; }
+  .row { display:flex; flex-direction:column; max-width:78%; }
+  .row.user { align-self:flex-end; align-items:flex-end; }
+  .row.agent { align-self:flex-start; }
+  .who { font-size:.68rem; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); margin:0 4px 4px; }
+  .bubble { padding:11px 15px; border-radius:10px; white-space:pre-wrap; word-break:break-word; line-height:1.6; }
+  .user .bubble { background:var(--navy); color:var(--ivory); }
+  .agent .bubble { background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--gold); }
+  .agent .bubble.err { background:#fbeaea; color:#7d2a2d; border-left-color:var(--bad); }
+  .agent .bubble.wait { color:var(--muted); font-style:italic; }
+  .meta { font-size:.72rem; color:var(--muted); margin:4px 4px 0; }
+  pre { background:#0f1a30; color:#ece6d6; padding:10px 12px; border-radius:8px; overflow-x:auto; margin:8px 0; white-space:pre; font-size:.85rem; }
+  code { background:rgba(20,33,61,.08); padding:1px 5px; border-radius:4px; font-size:.9em; }
+  pre code { background:none; padding:0; }
+  form { display:flex; gap:10px; padding:14px 28px 20px; border-top:1px solid var(--line); background:var(--paper); }
+  input { flex:1; padding:12px 14px; font-size:1rem; border:1px solid var(--line); border-radius:8px; outline:none; background:#fff; }
+  input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,145,79,.2); }
+  button.send { background:var(--navy); color:var(--ivory); border:0; padding:0 26px; border-radius:8px; font-size:1rem; cursor:pointer; }
+  button.send:hover { background:#1d2f57; }
+  button.send:disabled { opacity:.5; cursor:not-allowed; }
+  @media (max-width: 760px) { .app { grid-template-columns:1fr; grid-template-rows:auto 1fr; } .side { max-height:170px; } .row { max-width:92%; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">AI Software Developer Agent<small>OpenClaw &middot; MCP &middot; Docker</small></div>
+    <button class="newbtn" id="newchat" type="button">+ New chat</button>
+    <div class="histtitle">History</div>
+    <div class="list" id="list"></div>
+    <div class="sidefoot">Chats are saved in this browser only.<br /><a id="clearall">Clear all history</a></div>
+  </aside>
+  <section class="main">
+    <div class="head">
+      <div>
+        <h1>Agent Console</h1>
+        <div class="tag">Type a request in plain language. The agent acts through 4 MCP tools.</div>
+      </div>
+      <span class="pill"><span id="dot" class="dot"></span><span id="status">Checking gateway...</span></span>
+    </div>
+    <div class="chips" id="chips"><b>Quick actions</b></div>
+    <div id="log"></div>
+    <form id="form">
+      <input id="input" placeholder="Ask the agent to create, read or run something..." autocomplete="off" />
+      <button class="send" id="btn" type="submit">Send</button>
+    </form>
+  </section>
+</div>
+<script>
+(function () {
+  var TICK = String.fromCharCode(96);
+  var FENCE = TICK + TICK + TICK;
+  var QUICK = [
+    ["Create file", 'Use the tool local-tools__create_file to create demo.py containing: print("Hello from my AI Agent")'],
+    ["List files", "Use the tool local-tools__list_files to show all files"],
+    ["Read file", "Use the tool local-tools__read_file to read demo.py"],
+    ["Run command", "Use the tool local-tools__run_command to run: ls -la"],
+    ["Create & run code", "Create fib.py that prints the first 10 Fibonacci numbers, then run it with python3 and show me the output."]
+  ];
+
+  var log = document.getElementById("log");
+  var listEl = document.getElementById("list");
+  var form = document.getElementById("form");
+  var input = document.getElementById("input");
+  var btn = document.getElementById("btn");
+  var chipsBox = document.getElementById("chips");
+  var chats = [];
+  var currentId = null;
+  var busy = false;
+
+  function load() {
+    try { chats = JSON.parse(localStorage.getItem("chats") || "[]"); } catch (e) { chats = []; }
+    try { currentId = localStorage.getItem("currentChat"); } catch (e) { currentId = null; }
+  }
+  function save() {
+    try {
+      localStorage.setItem("chats", JSON.stringify(chats.slice(0, 30)));
+      if (currentId) localStorage.setItem("currentChat", currentId);
+    } catch (e) {}
+  }
+  function newId() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()); }
+  function getChat(id) { for (var i = 0; i < chats.length; i++) if (chats[i].id === id) return chats[i]; return null; }
+
+  function createChat() {
+    var c = { id: newId(), title: "New chat", ts: Date.now(), messages: [] };
+    chats.unshift(c);
+    currentId = c.id;
+    save();
+    return c;
+  }
+
+  function renderRich(el, text) {
+    el.textContent = "";
+    text.split(FENCE).forEach(function (part, i) {
+      if (i % 2 === 1) {
+        var nl = part.indexOf("\n");
+        var code = nl >= 0 ? part.slice(nl + 1) : part;
+        var pre = document.createElement("pre");
+        var c = document.createElement("code");
+        c.textContent = code.replace(/\n$/, "");
+        pre.appendChild(c); el.appendChild(pre);
+      } else {
+        part.split(TICK).forEach(function (seg, j) {
+          if (j % 2 === 1) { var k = document.createElement("code"); k.textContent = seg; el.appendChild(k); }
+          else el.appendChild(document.createTextNode(seg));
+        });
+      }
+    });
+  }
+
+  function renderSidebar() {
+    listEl.textContent = "";
+    if (!chats.length) {
+      var n = document.createElement("div"); n.className = "noitems"; n.textContent = "No chats yet.";
+      listEl.appendChild(n); return;
+    }
+    chats.slice().sort(function (a, b) { return b.ts - a.ts; }).forEach(function (c) {
+      var it = document.createElement("div");
+      it.className = "item" + (c.id === currentId ? " active" : "");
+      var t = document.createElement("span"); t.className = "t"; t.textContent = c.title;
+      var del = document.createElement("button"); del.type = "button"; del.textContent = "\u00d7"; del.title = "Delete";
+      del.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (busy) return;
+        chats = chats.filter(function (x) { return x.id !== c.id; });
+        if (currentId === c.id) currentId = chats.length ? chats[0].id : null;
+        save(); renderSidebar(); renderMessages();
+      });
+      it.addEventListener("click", function () {
+        if (busy) return;
+        currentId = c.id; save(); renderSidebar(); renderMessages();
+      });
+      it.appendChild(t); it.appendChild(del); listEl.appendChild(it);
+    });
+  }
+
+  function makeRow(role, text, err, meta) {
+    var row = document.createElement("div"); row.className = "row " + role;
+    var who = document.createElement("div"); who.className = "who"; who.textContent = role === "user" ? "You" : "Agent";
+    var bubble = document.createElement("div"); bubble.className = "bubble" + (err ? " err" : "");
+    if (role === "agent" && text) renderRich(bubble, text); else bubble.textContent = text || "";
+    var m = document.createElement("div"); m.className = "meta"; m.textContent = meta || "";
+    row.appendChild(who); row.appendChild(bubble); row.appendChild(m);
+    log.appendChild(row);
+    return { bubble: bubble, meta: m };
+  }
+
+  function renderMessages() {
+    log.textContent = "";
+    var c = getChat(currentId);
+    if (!c || !c.messages.length) {
+      var d = document.createElement("div"); d.className = "empty";
+      var h = document.createElement("h2"); h.textContent = "How can I help?";
+      var p = document.createElement("div");
+      p.textContent = "Pick a quick action above, or type your own request. Example: create a Python file and run it.";
+      d.appendChild(h); d.appendChild(p); log.appendChild(d); return;
+    }
+    c.messages.forEach(function (m) { makeRow(m.role, m.text, m.err, m.meta); });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setBusy(b) {
+    busy = b; btn.disabled = b;
+    Array.prototype.forEach.call(chipsBox.querySelectorAll(".chip"), function (x) { x.disabled = b; });
+  }
+
+  async function send(text) {
+    text = (text || "").trim();
+    if (busy || !text) return;
+    var chat = getChat(currentId) || createChat();
+    if (!chat.messages.length) chat.title = text.length > 36 ? text.slice(0, 36) + "..." : text;
+    chat.ts = Date.now();
+    var userMsg = { role: "user", text: text };
+    var agentMsg = { role: "agent", text: "", err: false, meta: "" };
+    chat.messages.push(userMsg);
+    chat.messages.push(agentMsg);
+    save(); renderSidebar(); renderMessages();
+
+    var rows = log.querySelectorAll(".row.agent");
+    var last = rows[rows.length - 1];
+    var bubble = last.querySelector(".bubble");
+    var meta = last.querySelector(".meta");
+    bubble.className = "bubble wait";
+    bubble.textContent = "Thinking... 0 s";
+
+    setBusy(true);
+    var t0 = Date.now();
+    var got = false;
+    var timer = setInterval(function () {
+      if (!got) bubble.textContent = "Thinking... " + Math.round((Date.now() - t0) / 1000) + " s";
+    }, 500);
+
+    try {
+      var res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, conversationId: chat.id })
+      });
+      if (!res.ok) {
+        agentMsg.err = true;
+        agentMsg.text = "Error " + res.status + ": " + (await res.text());
+        bubble.className = "bubble err"; bubble.textContent = agentMsg.text;
+      } else {
+        var reader = res.body.getReader();
+        var dec = new TextDecoder();
+        var buf = "";
+        while (true) {
+          var chunk = await reader.read();
+          if (chunk.done) break;
+          buf += dec.decode(chunk.value, { stream: true });
+          var lines = buf.split("\n");
+          buf = lines.pop();
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (line.indexOf("data:") !== 0) continue;
+            var payload = line.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              var j = JSON.parse(payload);
+              if (j.error) {
+                agentMsg.err = true;
+                agentMsg.text = "Error: " + (j.error.message || JSON.stringify(j.error));
+                bubble.className = "bubble err"; bubble.textContent = agentMsg.text;
+                got = true; continue;
+              }
+              var delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+              if (delta) {
+                got = true;
+                agentMsg.text += delta;
+                bubble.className = "bubble";
+                renderRich(bubble, agentMsg.text);
+                log.scrollTop = log.scrollHeight;
+              }
+            } catch (ex) {}
+          }
+        }
+        if (!got) { agentMsg.err = true; agentMsg.text = "(No reply received)"; bubble.className = "bubble err"; bubble.textContent = agentMsg.text; }
+      }
+    } catch (ex) {
+      agentMsg.err = true;
+      agentMsg.text = "Connection failed: " + ex.message;
+      bubble.className = "bubble err"; bubble.textContent = agentMsg.text;
+    }
+    clearInterval(timer);
+    agentMsg.meta = "Took " + ((Date.now() - t0) / 1000).toFixed(1) + " s";
+    meta.textContent = agentMsg.meta;
+    save();
+    setBusy(false);
+    input.focus();
+  }
+
+  QUICK.forEach(function (q) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = q[0]; b.title = q[1];
+    b.addEventListener("click", function () { send(q[1]); });
+    chipsBox.appendChild(b);
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = input.value; input.value = "";
+    send(v);
+  });
+
+  document.getElementById("newchat").addEventListener("click", function () {
+    if (busy) return;
+    createChat(); renderSidebar(); renderMessages(); input.focus();
+  });
+
+  document.getElementById("clearall").addEventListener("click", function () {
+    if (busy) return;
+    if (!confirm("Delete all saved chats from this browser?")) return;
+    chats = []; currentId = null;
+    try { localStorage.removeItem("chats"); localStorage.removeItem("currentChat"); } catch (e) {}
+    renderSidebar(); renderMessages();
+  });
+
+  function checkHealth() {
+    fetch("/api/health")
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        document.getElementById("dot").className = "dot live";
+        document.getElementById("status").textContent = "Gateway online";
+      })
+      .catch(function () {
+        document.getElementById("dot").className = "dot down";
+        document.getElementById("status").textContent = "Gateway unreachable";
+      });
+  }
+
+  load();
+  if (!getChat(currentId)) currentId = chats.length ? chats[0].id : null;
+  renderSidebar(); renderMessages();
+  checkHealth();
+  setInterval(checkHealth, 15000);
+})();
+</script>
+</body>
+</html>
